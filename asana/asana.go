@@ -63,6 +63,11 @@ type (
 		Workspaces []Workspace       `json:"workspaces,omitempty"`
 	}
 
+	Team struct {
+		GID  string `json:"gid,omitempty"`
+		Name string `json:"name,omitempty"`
+	}
+
 	Project struct {
 		ID       int64  `json:"id,omitempty"`
 		GID      string `json:"gid,omitempty"`
@@ -70,6 +75,7 @@ type (
 		Archived bool   `json:"archived,omitempty"`
 		Color    string `json:"color,omitempty"`
 		Notes    string `json:"notes,omitempty"`
+		Team     *Team  `json:"team,omitempty"`
 	}
 
 	Task struct {
