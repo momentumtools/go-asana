@@ -105,7 +105,7 @@ func TestListProjects(t *testing.T) {
 
 	mux.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"data":[
-			{"id":1,"name":"Project 1"},
+			{"id":1,"name":"Project 1", "team":{"gid": "3232", "name": "Team 1"}},
 			{"id":2,"name":"Project 2"}
 		]}`)
 	})
@@ -116,7 +116,7 @@ func TestListProjects(t *testing.T) {
 	}
 
 	want := []Project{
-		{ID: 1, Name: "Project 1"},
+		{ID: 1, Name: "Project 1", Team: &Team{GID: "3232", Name: "Team 1"}},
 		{ID: 2, Name: "Project 2"},
 	}
 
