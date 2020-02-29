@@ -79,21 +79,22 @@ type (
 	}
 
 	Task struct {
-		ID             int64     `json:"id,omitempty"`
-		GID            string    `json:"gid,omitempty"`
-		Assignee       *User     `json:"assignee,omitempty"`
-		AssigneeStatus string    `json:"assignee_status,omitempty"`
-		CreatedAt      time.Time `json:"created_at,omitempty"`
-		CreatedBy      User      `json:"created_by,omitempty"` // Undocumented field, but it can be included.
-		Completed      bool      `json:"completed,omitempty"`
-		CompletedAt    time.Time `json:"completed_at,omitempty"`
-		Name           string    `json:"name,omitempty"`
-		Hearts         []Heart   `json:"hearts,omitempty"`
-		Notes          string    `json:"notes,omitempty"`
-		ParentTask     *Task     `json:"parent,omitempty"`
-		Projects       []Project `json:"projects,omitempty"`
-		DueOn          string    `json:"due_on,omitempty"`
-		DueAt          string    `json:"due_at,omitempty"`
+		ID             int64         `json:"id,omitempty"`
+		GID            string        `json:"gid,omitempty"`
+		Assignee       *User         `json:"assignee,omitempty"`
+		AssigneeStatus string        `json:"assignee_status,omitempty"`
+		CreatedAt      time.Time     `json:"created_at,omitempty"`
+		CreatedBy      User          `json:"created_by,omitempty"` // Undocumented field, but it can be included.
+		Completed      bool          `json:"completed,omitempty"`
+		CompletedAt    time.Time     `json:"completed_at,omitempty"`
+		CustomFields   []CustomField `json:"custom_fields,omitempty"`
+		Name           string        `json:"name,omitempty"`
+		Hearts         []Heart       `json:"hearts,omitempty"`
+		Notes          string        `json:"notes,omitempty"`
+		ParentTask     *Task         `json:"parent,omitempty"`
+		Projects       []Project     `json:"projects,omitempty"`
+		DueOn          string        `json:"due_on,omitempty"`
+		DueAt          string        `json:"due_at,omitempty"`
 	}
 	// TaskUpdate is used to update a task.
 	TaskUpdate struct {
@@ -125,20 +126,67 @@ type (
 		Notes string `json:"notes,omitempty"`
 	}
 
+	CustomField struct {
+		GID                     string        `json:"gid,omitempty"`
+		ResourceType            string        `json:"resource_type,omitempty"`
+		CurrencyCode            string        `json:"currency_code,omitempty"`
+		CustomLabel             string        `json:"custom_label,omitempty"`
+		CustomLabelPosition     string        `json:"custom_label_position,omitempty"`
+		Description             string        `json:"description,omitempty"`
+		Enabled                 bool          `json:"enabled,omitempty"`
+		EnumOptions             []EnumOptions `json:"enum_options,omitempty"`
+		EnumValue               EnumValue     `json:"enum_value,omitempty"`
+		Format                  string        `json:"format,omitempty"`
+		HasNotificationsEnabled bool          `json:"has_notifications_enabled,omitempty"`
+		IsGlobalToWorkspace     bool          `json:"is_global_to_workspace,omitempty"`
+		Name                    string        `json:"name,omitempty"`
+		NumberValue             float64       `json:"number_value,omitempty"`
+		Precision               int           `json:"precision,omitempty"`
+		ResourceSubtype         string        `json:"resource_subtype,omitempty"`
+		TextValue               string        `json:"text_value,omitempty"`
+		Type                    string        `json:"type,omitempty"`
+	}
+
+	EnumOptions struct {
+		GID          string `json:"gid,omitempty"`
+		ResourceType string `json:"resource_type,omitempty"`
+		Color        string `json:"color,omitempty"`
+		Enabled      bool   `json:"enabled,omitempty"`
+		Name         string `json:"name,omitempty"`
+	}
+
+	EnumValue struct {
+		GID          string `json:"gid,omitempty"`
+		ResourceType string `json:"resource_type,omitempty"`
+		Color        string `json:"color,omitempty"`
+		Enabled      bool   `json:"enabled,omitempty"`
+		Name         string `json:"name,omitempty"`
+	}
+
 	Filter struct {
-		Archived       *bool    `url:"archived,omitempty"`
-		Assignee       int64    `url:"assignee,omitempty"`
-		AssigneeGID    int64    `url:"assignee,omitempty"`
-		Project        int64    `url:"project,omitempty"`
-		ProjectGID     string   `url:"project,omitempty"`
-		Workspace      int64    `url:"workspace,omitempty"`
-		WorkspaceGID   string   `url:"workspace,omitempty"`
-		CompletedSince string   `url:"completed_since,omitempty"`
-		ModifiedSince  string   `url:"modified_since,omitempty"`
-		OptFields      []string `url:"opt_fields,comma,omitempty"`
-		OptExpand      []string `url:"opt_expand,comma,omitempty"`
-		Offset         string   `url:"offset,omitempty"`
-		Limit          uint32   `url:"limit,omitempty"`
+		Archived       *bool         `url:"archived,omitempty"`
+		Assignee       int64         `url:"assignee,omitempty"`
+		AssigneeGID    int64         `url:"assignee,omitempty"`
+		Project        int64         `url:"project,omitempty"`
+		ProjectGID     string        `url:"project,omitempty"`
+		Workspace      int64         `url:"workspace,omitempty"`
+		WorkspaceGID   string        `url:"workspace,omitempty"`
+		CompletedSince string        `url:"completed_since,omitempty"`
+		ModifiedSince  string        `url:"modified_since,omitempty"`
+		OptFields      []string      `url:"opt_fields,comma,omitempty"`
+		OptExpand      []string      `url:"opt_expand,comma,omitempty"`
+		Offset         string        `url:"offset,omitempty"`
+		Limit          uint32        `url:"limit,omitempty"`
+		Search         *SearchFilter `url:"-"`
+	}
+
+	SearchFilter struct {
+		ProjectAll      int64  `url:"projects.all,omitempty"`
+		SortBy          string `url:"sort_by,omitempty"`
+		SortAscending   *bool  `url:"sort_ascending,omitempty"`
+		CreatedAtAfter  string `url:"created_at.after,omitempty"`
+		CreatedAtBefore string `url:"created_at.before,omitempty"`
+		ModifiedAtAfter string `url:"modified_at.after,omitempty"`
 	}
 
 	request struct {
@@ -284,6 +332,13 @@ func (c *Client) ListTasks(ctx context.Context, opt *Filter) ([]Task, error) {
 		}
 	}
 	return tasks, nil
+}
+
+func (c *Client) SearchTasks(ctx context.Context, workspaceID int64, opt *Filter) ([]Task, error) {
+	tasks := []Task{}
+	path := fmt.Sprintf("workspaces/%d/tasks/search", workspaceID)
+	err := c.Request(ctx, path, opt, &tasks)
+	return tasks, err
 }
 
 func (c *Client) GetTask(ctx context.Context, id int64, opt *Filter) (Task, error) {
@@ -493,7 +548,7 @@ func (c *Client) request(ctx context.Context, method string, path string, data i
 	return res.NextPage, err
 }
 
-func addOptions(s string, opt interface{}) (string, error) {
+func addOptions(s string, opt *Filter) (string, error) {
 	u, err := url.Parse(s)
 	if err != nil {
 		return s, err
@@ -502,6 +557,17 @@ func addOptions(s string, opt interface{}) (string, error) {
 	if err != nil {
 		return s, err
 	}
+
+	if opt != nil {
+		sqs, err := query.Values(opt.Search)
+		if err != nil {
+			return s, err
+		}
+		for k, v := range sqs {
+			qs[k] = v
+		}
+	}
+
 	u.RawQuery = qs.Encode()
 	return u.String(), nil
 }
